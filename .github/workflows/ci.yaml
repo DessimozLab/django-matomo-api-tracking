@@ -6,12 +6,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: "3.9"
-            tox-env: "py39-dj22"
-          - python-version: "3.9"
-            tox-env: "py39-dj32"
-          - python-version: "3.9"
-            tox-env: "py39-dj42"
           - python-version: "3.10"
             tox-env: "py310-dj22"
           - python-version: "3.10"
