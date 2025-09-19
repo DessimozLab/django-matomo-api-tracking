@@ -1,6 +1,6 @@
 [project]
 name = "django-matomo-api-tracking"
-version = "0.1.3"
+version = "0.2.0"
 description = "Django app to track webtraffic serverside with Matomo API"
 authors = [
     {name ="Adrian Altenhoff", email="adrian.altenhoff@inf.ethz.ch"},
