@@ -17,6 +17,7 @@ This django app enables server side traffic tracking. The code is greatly inspir
         'site_id': <your_site_id>,
         # 'ignore_paths': ["/debug/", "/health/"],
         # 'token_auth': "<your auth token>",  # e.g.  "33dc3f2536d3025974cccb4b4d2d98f4"
+        # 'timeout': 8,
     }
 
 3. enable the middleware by adding the matomo_api_tracking middleware to the list of enabled middlewares in the settings: 
@@ -29,4 +30,5 @@ This django app enables server side traffic tracking. The code is greatly inspir
 
 In the settings part, the `ignore_path` can be used to entirely skip certain
 paths from being tracked. If you specify an `token_auth`, the app will also send
-the client's IP address (cip parameter). But this is not required.
+the client's IP address (cip parameter). But this is not required. Additionally,
+you can specify a timeout for the requests for middleware sent tracking data.

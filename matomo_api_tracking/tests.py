@@ -3,6 +3,8 @@ import logging
 import responses
 from collections import ChainMap
 from urllib.parse import parse_qs
+from unittest.mock import patch
+from requests.exceptions import Timeout
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
@@ -248,6 +250,16 @@ class MatomoTestCase(TestCase):
         with self.assertRaises(Exception):
             client.get('/home/?p=%2Fhome&r=test.com')
 
+    @override_settings(MIDDLEWARE=[
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'matomo_api_tracking.middleware.MatomoApiTrackingMiddleware'
+    ], MATOMO_API_TRACKING=ChainMap({'timeout': "non-numeric-value"},
+                                    settings.MATOMO_API_TRACKING))
+    def test_matomo_middleware_non_numeric_timeout(self):
+        client = Client()
+        with self.assertRaises(Exception):
+            client.get('/home/?p=%2Fhome&r=test.com')
+
     @responses.activate
     def test_sending_tracking_request_logs(self):
         request = self.make_fake_request('/somewhere/')
@@ -273,3 +285,17 @@ class MatomoTestCase(TestCase):
         self.assertIn("sending tracking request failed:", cm.output[0])
         self.assertIn("Bad Request", cm.output[0])
         self.assertIn("/somewhere/", cm.output[1])
+
+    @patch('matomo_api_tracking.tasks.logger')
+    @patch('matomo_api_tracking.tasks.requests.get')
+    def test_send_matomo_tracking_logs_timeout(self, mock_get, mock_logger):
+        from matomo_api_tracking.tasks import send_matomo_tracking
+        mock_get.side_effect = Timeout
+        params = {
+            'url': 'http://example.com?foo=bar',
+            'user_agent': 'test-agent',
+            'language': 'en'
+        }
+        send_matomo_tracking(params)
+        mock_logger.warning.assert_any_call("tracking request timed out: http://example.com?foo=bar")
+        self.assertTrue(mock_logger.warning.called)

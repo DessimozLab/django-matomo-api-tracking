@@ -21,8 +21,11 @@ class MatomoApiTrackingMiddleware:
         try:
             account = settings.MATOMO_API_TRACKING['site_id']
             ignore_paths = settings.MATOMO_API_TRACKING.get('ignore_paths', [])
+            timeout = float(settings.MATOMO_API_TRACKING.get("timeout", 8))
         except (AttributeError, KeyError):
             raise Exception("Matomo configuration incomplete")
+        except ValueError:
+            raise Exception("Matomo timeout must be a numeric value")
 
         # do not log pages that start with an ignore_path url
         if any(p for p in ignore_paths if request.path.startswith(p)):
@@ -43,7 +46,7 @@ class MatomoApiTrackingMiddleware:
             request, account, path=request.path, referer=referer, title=title)
         response = set_cookie(params, response)
         try:
-            send_matomo_tracking.delay(params)
+            send_matomo_tracking.delay(params, timeout=timeout)
         except Exception as e:
             logger.warning("cannot send google analytic tracking post: {}"
                            .format(e))
