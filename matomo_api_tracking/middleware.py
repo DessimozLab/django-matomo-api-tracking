@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import logging
 
 from .utils import build_api_params, set_cookie
+from .dispatcher import get_backend
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +20,11 @@ class MatomoApiTrackingMiddleware:
 
     def process_response(self, request, response):
         try:
+            _ = settings.MATOMO_API_TRACKING['url']
             account = settings.MATOMO_API_TRACKING['site_id']
             ignore_paths = settings.MATOMO_API_TRACKING.get('ignore_paths', [])
-            timeout = float(settings.MATOMO_API_TRACKING.get("timeout", 8))
         except (AttributeError, KeyError):
             raise Exception("Matomo configuration incomplete")
-        except ValueError:
-            raise Exception("Matomo timeout must be a numeric value")
 
         # do not log pages that start with an ignore_path url
         if any(p for p in ignore_paths if request.path.startswith(p)):
@@ -41,14 +40,16 @@ class MatomoApiTrackingMiddleware:
         except AttributeError:
             title = None
 
-        referer = request.META.get('HTTP_REFERER', '')
-        params = build_api_params(
-            request, account, path=request.path, referer=referer, title=title)
-        response = set_cookie(params, response)
-        try:
-            send_matomo_tracking.delay(params, timeout=timeout)
-        except Exception as e:
-            logger.warning("cannot send google analytic tracking post: {}"
-                           .format(e))
+        referer = request.META.get('HTTP_REFERER', None)
+        user_id = None
+        if hasattr(request, "user") and getattr(request.user, "is_authenticated", False):
+            user_id = getattr(request.user, 'id', None)
+
+        data = build_api_params(
+            request, account, path=request.path, referer=referer, title=title, user_id=user_id)
+        params, meta = data['matomo_params'], data['meta']
+        response = set_cookie(meta, response)
+        backend = get_backend()
+        backend.send(params, meta)
 
         return response

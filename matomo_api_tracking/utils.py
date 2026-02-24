@@ -49,7 +49,10 @@ def set_cookie(params, response):
 
 def build_api_params(
         request, account, path=None, referer=None, title=None,
-        user_id=None, custom_params={}):
+        user_id=None, custom_params=None):
+    if custom_params is None:
+        custom_params = {}
+
     meta = request.META
     # determine the referrer
     referer = referer or request.GET.get('r', '')
@@ -58,7 +61,7 @@ def build_api_params(
     if hasattr(settings, 'CUSTOM_UIP_HEADER') and settings.CUSTOM_UIP_HEADER:
         custom_uip = meta.get(settings.CUSTOM_UIP_HEADER)
     path = path or request.GET.get('p', '/')
-    path = request.build_absolute_uri(quote(path.encode('utf-8')))
+    path = request.build_absolute_uri(path)
 
     # get client ip address
     if 'HTTP_X_FORWARDED_FOR' in meta and meta.get('HTTP_X_FORWARDED_FOR', ''):
@@ -72,10 +75,9 @@ def build_api_params(
     else:
         client_ip = meta.get('REMOTE_ADDR', '')
 
-    # try and get visitor cookie from the request
-    user_agent = meta.get('HTTP_USER_AGENT')
-    if not user_agent:
-        user_agent = meta.get('USER_AGENT', 'Unknown')
+    user_agent = meta.get('HTTP_USER_AGENT') or meta.get('USER_AGENT', 'Unknown')
+
+    # try and get visitor_id from cookie, or genereate one
     cookie = request.COOKIES.get(COOKIE_NAME)
     visitor_id = get_visitor_id(cookie, client_ip, request)
 
@@ -88,6 +90,8 @@ def build_api_params(
         '_id': visitor_id,
         'urlref': referer,
         'url': path,
+        'cdt': int(time.time()),
+        'ua': user_agent,
     }
 
     # add user ID if exists
@@ -97,7 +101,7 @@ def build_api_params(
     # if token_auth is specified, we can add the cip parameter (visitor's IP)
     try:
         token_auth = settings.MATOMO_API_TRACKING['token_auth']
-        params.update({'token_auth': token_auth, 'cip': custom_uip or client_ip})
+        params['cip'] = custom_uip or client_ip
     except KeyError:
         pass
 
@@ -106,18 +110,17 @@ def build_api_params(
 
     # add page title if supplied
     if title:
-        u_title = title.decode('utf-8') if isinstance(title, bytes) else title
-        params.update({'action_name': quote(u_title.encode('utf-8'))})
+        if isinstance(title, bytes):
+            title = title.decode('utf-8')
+        params['action_name'] = title
 
-    try:
-        track_url = settings.MATOMO_API_TRACKING['url']
-    except KeyError:
-        raise Exception("Matomo configuration incomplete")
-
-    track_url += "?&" + urlencode(params)
     locale = get_language_from_request(request)
+    if locale:
+        params['lang'] = locale
 
-    return {'url': track_url,
+    return {
+        "matomo_params": params,
+        "meta": {
             'user_agent': user_agent,
             'language': locale or settings.LANGUAGE_CODE,
             'visitor_id': visitor_id,
@@ -125,4 +128,5 @@ def build_api_params(
             'COOKIE_USER_PERSISTENCE': COOKIE_USER_PERSISTENCE,
             'COOKIE_NAME': COOKIE_NAME,
             'COOKIE_PATH': COOKIE_PATH,
-            }
+        }
+    }

@@ -11,22 +11,31 @@ This django app enables server side traffic tracking. The code is greatly inspir
 1. add ``matomo_api_tracking`` to your ``INSTALLED_APPS`` setting.
 2. add a new variable ``MATOMO_API_TRACKING`` to your settings to configure the behaviour of the app:
 
-
+```
     MATOMO_API_TRACKING = {
         'url': 'https://your-matomo-server.com/matomo.php',
         'site_id': <your_site_id>,
+        'backend': 
+            # choose one of the following backends. if non is specified, the default to CeleryTrackingBackend
+            "matomo_api_tracking.backends.celery.CeleryTrackingBackend",
+            # "matomo_api_tracking.backends.redis_batch.RedisBatchTrackingBackend",
+            # "matomo_api_tracking.backends.direct.DirectTrackingBackend",  # for debugging
         # 'ignore_paths': ["/debug/", "/health/"],
         # 'token_auth': "<your auth token>",  # e.g.  "33dc3f2536d3025974cccb4b4d2d98f4"
         # 'timeout': 8,
+        # 'redis_url': 'redis://localhost:6379/0',  # needed for batching
+        # 'redis_key': 'matomo_events',
     }
+```
 
 3. enable the middleware by adding the matomo_api_tracking middleware to the list of enabled middlewares in the settings: 
 
-
+```
     MIDDLEWARE = [
         ...
         'matomo_api_tracking.middleware.MatomoApiTrackingMiddleware',
     ]
+```
 
 In the settings part, the `ignore_path` can be used to entirely skip certain
 paths from being tracked. If you specify an `token_auth`, the app will also send

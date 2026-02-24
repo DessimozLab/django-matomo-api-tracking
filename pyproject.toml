@@ -19,6 +19,7 @@ requires-python = ">=3.10, <3.13"
 
 [project.optional-dependencies]
 dev = ["flake8 (>5.0.0)", "responses (>0.23.1, <1.0)"]
+bulk_send = ["redis (>=6.0.0, <8.0)"]
 
 [tool.poetry]
 packages = [{include = "matomo_api_tracking", from = "./"}]
