@@ -4,7 +4,6 @@ import uuid
 import random
 from django.conf import settings
 from django.utils.translation import get_language_from_request
-from urllib.parse import urlencode, quote
 
 VERSION = '1'
 COOKIE_NAME = '__matomo'
@@ -99,11 +98,8 @@ def build_api_params(
         params.update({'uid': user_id})
 
     # if token_auth is specified, we can add the cip parameter (visitor's IP)
-    try:
-        token_auth = settings.MATOMO_API_TRACKING['token_auth']
+    if 'token_auth' in settings.MATOMO_API_TRACKING:
         params['cip'] = custom_uip or client_ip
-    except KeyError:
-        pass
 
     # add custom parameters
     params.update(custom_params)

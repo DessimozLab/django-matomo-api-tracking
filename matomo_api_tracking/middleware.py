@@ -1,5 +1,4 @@
 from django.conf import settings
-from .tasks import send_matomo_tracking
 from bs4 import BeautifulSoup
 import logging
 

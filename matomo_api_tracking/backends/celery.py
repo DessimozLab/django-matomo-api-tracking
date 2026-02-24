@@ -1,5 +1,4 @@
 import logging
-from django.conf import settings
 from ..tasks import send_matomo_tracking
 from .base import BaseTrackingBackend
 logger = logging.getLogger(__name__)

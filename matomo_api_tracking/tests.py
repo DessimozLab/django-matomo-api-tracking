@@ -17,7 +17,6 @@ from .transport import logger as transport_logger
 from .backends.redis_batch import RedisBatchTrackingBackend
 
 
-
 class MatomoTestCase(TestCase):
 
     def make_fake_request(self, url, headers={}):
@@ -297,7 +296,6 @@ class MatomoTestCase(TestCase):
         self.assertTrue(mock_logger.warning.called)
 
 
-
 class RedisBatchTrackingBackendTests(TestCase):
 
     @patch('matomo_api_tracking.backends.redis_batch.redis')
@@ -343,7 +341,6 @@ class RedisBatchTrackingBackendTests(TestCase):
         mock_redis_module.Redis.from_url.return_value = mock_redis_instance
         backend = RedisBatchTrackingBackend()
         self.assertEqual(backend.key, 'matomo_events')
-
 
 
 class FlushMatomoBatchTests(TestCase):
@@ -428,7 +425,12 @@ class FlushMatomoBatchTests(TestCase):
         with patch('matomo_api_tracking.tasks.logger') as mock_logger:
             flush_matomo_batch(batch_size=3)
             # Should log a warning about failure
-            self.assertTrue(any("will be pushed back" in str(arg) for call_args in mock_logger.warning.call_args_list for arg in call_args[0]))
+            self.assertTrue(
+                any("will be pushed back" in str(arg) \
+                    for call_args in mock_logger.warning.call_args_list \
+                    for arg in call_args[0]
+                )
+            )
         # Should requeue the event
         mock_redis_instance.lpush.assert_called_once_with('matomo_events', json.dumps(event_dict))
 

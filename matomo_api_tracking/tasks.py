@@ -1,6 +1,3 @@
-from urllib.parse import urlencode
-
-import requests
 import logging
 import json
 from celery import shared_task
