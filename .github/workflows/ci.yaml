@@ -23,6 +23,18 @@ jobs:
           - python-version: "3.12"
             tox-env: "py312-dj52"
           - python-version: "3.12"
+            tox-env: "py312-dj60"
+          - python-version: "3.13"
+            tox-env: "py313-dj42"
+          - python-version: "3.13"
+            tox-env: "py313-dj52"
+          - python-version: "3.13"
+            tox-env: "py313-dj60"
+          - python-version: "3.14"
+            tox-env: "py314-dj52"
+          - python-version: "3.14"
+            tox-env: "py314-dj60"
+          - python-version: "3.14"
             tox-env: "lint"
     steps:
       - uses: actions/checkout@v5
