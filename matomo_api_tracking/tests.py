@@ -14,6 +14,7 @@ from django.conf import settings
 from .middleware import MatomoApiTrackingMiddleware
 from .utils import COOKIE_NAME, build_api_params
 from .transport import logger as transport_logger
+from .backends.direct import DirectTrackingBackend
 from .backends.redis_batch import RedisBatchTrackingBackend
 
 
@@ -341,6 +342,45 @@ class RedisBatchTrackingBackendTests(TestCase):
         mock_redis_module.Redis.from_url.return_value = mock_redis_instance
         backend = RedisBatchTrackingBackend()
         self.assertEqual(backend.key, 'matomo_events')
+
+
+class DirectTrackingBackendTests(TestCase):
+
+    @override_settings(MATOMO_API_TRACKING={
+        'url': 'http://example.com/matomo.php',
+        'site_id': 1,
+        'timeout': 5,
+    })
+    @responses.activate
+    def test_send_makes_synchronous_get_request(self):
+        responses.add(
+            responses.GET, 'http://example.com/matomo.php',
+            body='', status=200)
+
+        backend = DirectTrackingBackend()
+        params = {'idsite': 1, 'rec': 1}
+        meta = {'user_agent': 'test-agent', 'language': 'en'}
+        backend.send(params, meta)
+
+        self.assertEqual(len(responses.calls), 1)
+        request = responses.calls[0].request
+        self.assertIn('idsite=1', request.url)
+        self.assertEqual(request.headers['User-Agent'], 'test-agent')
+
+    @override_settings(MATOMO_API_TRACKING={
+        'url': 'http://example.com/matomo.php',
+        'site_id': 1,
+    })
+    @responses.activate
+    def test_send_logs_failure(self):
+        responses.add(
+            responses.GET, 'http://example.com/matomo.php',
+            body='', status=500)
+
+        backend = DirectTrackingBackend()
+        with self.assertLogs(transport_logger, logging.WARNING) as cm:
+            backend.send({'idsite': 1}, {})
+        self.assertIn("Matomo tracking failed", cm.output[0])
 
 
 class FlushMatomoBatchTests(TestCase):
