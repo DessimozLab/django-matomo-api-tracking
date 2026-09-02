@@ -33,6 +33,7 @@ For this middleware to work you must have the following items configured:
             # "matomo_api_tracking.backends.redis_batch.RedisBatchTrackingBackend",
             # "matomo_api_tracking.backends.direct.DirectTrackingBackend",  # for debugging
         # 'ignore_paths': ["/debug/", "/health/"],
+        # 'url_masks': [(r"/api/hog/[^/]+/", "/api/hog/:hog_id/")],  # collapse dynamic path segments
         # 'token_auth': "<your auth token>",  # e.g.  "33dc3f2536d3025974cccb4b4d2d98f4"
         # 'timeout': 8,
         # 'redis_url': 'redis://localhost:6379/0',  # only needed for batching in the RedisBatchTrackingBackend
@@ -84,5 +85,20 @@ In the settings part, the `ignore_path` can be used to entirely skip certain
 paths from being tracked. If you specify an `token_auth`, the app will also send
 the client's IP address (cip parameter). But this is not required. Additionally,
 you can specify a timeout for the requests for middleware sent tracking data.
+
+`url_masks` lets you collapse variable path segments (e.g. object ids) into a fixed
+placeholder before the URL is sent to Matomo, so that every id doesn't create its own
+entry in the Matomo reports. It is a list of `(pattern, replacement)` pairs, each applied
+with `re.sub` to the tracked path in order, e.g.:
+
+```
+    'url_masks': [
+        (r"/api/hog/[^/]+/", "/api/hog/:hog_id/"),
+    ],
+```
+
+With this configured, a request to `/api/hog/HOG:F0014552.1b/` is tracked as
+`/api/hog/:hog_id/`. You can add multiple entries if several paths need this kind
+of masking.
 
 

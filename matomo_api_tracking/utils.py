@@ -1,4 +1,5 @@
 import hashlib
+import re
 import time
 import uuid
 import random
@@ -46,6 +47,21 @@ def set_cookie(params, response):
     return response
 
 
+def mask_url_path(path):
+    """Apply the configured `url_masks` regex substitutions to a path.
+
+    `url_masks` is a list of (pattern, replacement) pairs, applied in order,
+    so that variable path segments (e.g. record ids) can be collapsed to a
+    fixed placeholder before the URL is sent to Matomo. This keeps a single
+    tracking entry for endpoints like /api/hog/HOG:F0014552.1b/ instead of
+    creating one per id.
+    """
+    url_masks = settings.MATOMO_API_TRACKING.get('url_masks', [])
+    for pattern, replacement in url_masks:
+        path = re.sub(pattern, replacement, path)
+    return path
+
+
 def build_api_params(
         request, account, path=None, referer=None, title=None,
         user_id=None, custom_params=None):
@@ -60,6 +76,7 @@ def build_api_params(
     if hasattr(settings, 'CUSTOM_UIP_HEADER') and settings.CUSTOM_UIP_HEADER:
         custom_uip = meta.get(settings.CUSTOM_UIP_HEADER)
     path = path or request.GET.get('p', '/')
+    path = mask_url_path(path)
     path = request.build_absolute_uri(path)
 
     # get client ip address

@@ -241,6 +241,28 @@ class MatomoTestCase(TestCase):
     @override_settings(MIDDLEWARE=[
         'django.contrib.sessions.middleware.SessionMiddleware',
         'matomo_api_tracking.middleware.MatomoApiTrackingMiddleware'
+    ], MATOMO_API_TRACKING=ChainMap(
+        {'url_masks': [(r'/api/hog/[^/]+/', '/api/hog/:hog_id/')]},
+        settings.MATOMO_API_TRACKING))
+    @responses.activate
+    def test_matomo_middleware_url_masks(self):
+        responses.add(
+            responses.GET, settings.MATOMO_API_TRACKING['url'],
+            body='',
+            status=200)
+
+        request = self.make_fake_request('/api/hog/HOG:F0014552.1b/')
+        middleware = MatomoApiTrackingMiddleware(lambda req: HttpResponse())
+        middleware(request)
+
+        self.assertEqual(len(responses.calls), 1)
+        track_url = responses.calls[0].request.url
+        self.assertEqual(
+            parse_qs(track_url).get('url'), ['http://testserver/api/hog/:hog_id/'])
+
+    @override_settings(MIDDLEWARE=[
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'matomo_api_tracking.middleware.MatomoApiTrackingMiddleware'
     ], MATOMO_API_TRACKING={})
     def test_matomo_middleware_no_account_set(self):
         client = Client()
