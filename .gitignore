@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+matomo_api_tracking/_version.py
 develop-eggs/
 dist/
 downloads/
