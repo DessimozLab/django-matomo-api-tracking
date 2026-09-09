@@ -19,14 +19,23 @@ class MatomoApiTrackingMiddleware:
 
     def process_response(self, request, response):
         try:
-            _ = settings.MATOMO_API_TRACKING['url']
+            url = settings.MATOMO_API_TRACKING['url']
             account = settings.MATOMO_API_TRACKING['site_id']
             ignore_paths = settings.MATOMO_API_TRACKING.get('ignore_paths', [])
         except (AttributeError, KeyError):
             raise Exception("Matomo configuration incomplete")
 
+        logger.debug(
+            "Matomo tracking config: url=%s site_id=%r backend=%s ignore_paths=%s",
+            url, account,
+            settings.MATOMO_API_TRACKING.get(
+                'backend', 'matomo_api_tracking.backends.celery.CeleryTrackingBackend'),
+            ignore_paths,
+        )
+
         # do not log pages that start with an ignore_path url
         if any(p for p in ignore_paths if request.path.startswith(p)):
+            logger.debug("Matomo tracking skipped for %s (matches ignore_paths)", request.path)
             return response
 
         try:
@@ -47,6 +56,7 @@ class MatomoApiTrackingMiddleware:
         data = build_api_params(
             request, account, path=request.path, referer=referer, title=title, user_id=user_id)
         params, meta = data['matomo_params'], data['meta']
+        logger.debug("Matomo tracking params for %s: %s", request.path, params)
         response = set_cookie(meta, response)
         backend = get_backend()
         backend.send(params, meta)

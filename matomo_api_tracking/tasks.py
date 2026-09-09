@@ -34,11 +34,16 @@ def flush_matomo_batch(batch_size=500):
 
     r = redis.Redis.from_url(redis_url)
     key = config.get("redis_key", "matomo_events")
-    token_auth = config.get("TOKEN_AUTH")
+    token_auth = config.get("token_auth")
     try:
         timeout = float(config.get("timeout", 8))
     except ValueError:
         timeout = 8
+
+    logger.debug(
+        "Flushing Matomo batch: url=%s redis_key=%s batch_size=%s token_auth_set=%s",
+        matomo_url, key, batch_size, bool(token_auth),
+    )
 
     events = []
     for _ in range(batch_size):

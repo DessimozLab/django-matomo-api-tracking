@@ -289,7 +289,7 @@ class MatomoTestCase(TestCase):
         middleware = MatomoApiTrackingMiddleware(lambda req: HttpResponse())
         with self.assertLogs(transport_logger, logging.DEBUG) as cm:
             middleware(request)
-        self.assertIn("Matomo tracking sent successfully", cm.output[0])
+        self.assertTrue(any("Matomo tracking sent successfully" in line for line in cm.output))
 
     @responses.activate
     def test_sending_tracking_request_logs_failure_as_errors(self):
@@ -415,7 +415,7 @@ class FlushMatomoBatchTests(TestCase):
             'redis_url': 'redis://localhost/0',
             'url': 'http://example.com/track',
             'redis_key': 'matomo_events',
-            'TOKEN_AUTH': 'abc',
+            'token_auth': 'abc',
         }
 
         mock_redis_instance = MagicMock()

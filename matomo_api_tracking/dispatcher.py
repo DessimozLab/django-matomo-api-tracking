@@ -1,5 +1,8 @@
+import logging
 from django.conf import settings
 from django.utils.module_loading import import_string
+
+logger = logging.getLogger(__name__)
 
 _backend_instance = None
 
@@ -17,5 +20,6 @@ def get_backend():
     )
 
     backend_class = import_string(backend_path)
+    logger.debug("Matomo tracking backend resolved to %s", backend_path)
     _backend_instance = backend_class()
     return _backend_instance
