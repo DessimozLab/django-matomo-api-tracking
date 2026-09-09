@@ -14,6 +14,7 @@ def send_single_tracking_event(params: dict, meta: dict, matomo_url: str, timeou
         "User-Agent": meta.get("user_agent", ""),
         "Accept-Language": meta.get("language", ""),
     }
+    logger.debug("Sending Matomo tracking request to %s with params: %s", matomo_url, params)
     try:
         resp = requests.get(matomo_url, params=params, headers=headers, timeout=timeout)
         if resp.ok:
@@ -43,6 +44,10 @@ def send_bulk_tracking_events(
         for event in events
     ]
 
+    logger.debug(
+        "Sending Matomo bulk tracking request to %s with %d event(s): %s",
+        matomo_url, len(bulk_requests), bulk_requests,
+    )
     try:
         resp = requests.post(
             matomo_url,
