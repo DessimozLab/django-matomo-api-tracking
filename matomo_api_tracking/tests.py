@@ -404,6 +404,33 @@ class DirectTrackingBackendTests(TestCase):
             backend.send({'idsite': 1}, {})
         self.assertIn("Matomo tracking failed", cm.output[0])
 
+    @override_settings(MATOMO_API_TRACKING={
+        'url': 'http://example.com/matomo.php',
+        'site_id': 1,
+        'timeout': 5,
+        'token_auth': 'test-token-auth',
+    })
+    @responses.activate
+    def test_send_makes_post_request_when_token_auth_configured(self):
+        responses.add(
+            responses.POST, 'http://example.com/matomo.php',
+            body='', status=200)
+
+        backend = DirectTrackingBackend()
+        params = {'idsite': 1, 'rec': 1, 'cip': '100.100.200.10'}
+        meta = {'user_agent': 'test-agent', 'language': 'en'}
+        backend.send(params, meta)
+
+        self.assertEqual(len(responses.calls), 1)
+        request = responses.calls[0].request
+        self.assertEqual(request.method, 'POST')
+
+        body = json.loads(request.body)
+        self.assertEqual(body['token_auth'], 'test-token-auth')
+        self.assertEqual(len(body['requests']), 1)
+        # the visitor's IP (cip / "uip") must be present in the bulk request sent to Matomo
+        self.assertIn('cip=100.100.200.10', body['requests'][0])
+
 
 class FlushMatomoBatchTests(TestCase):
     @patch('matomo_api_tracking.tasks.redis')

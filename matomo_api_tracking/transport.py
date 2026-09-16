@@ -5,11 +5,21 @@ from urllib.parse import urlencode
 logger = logging.getLogger(__name__)
 
 
-def send_single_tracking_event(params: dict, meta: dict, matomo_url: str, timeout: float = 8) -> bool:
+def send_single_tracking_event(
+    params: dict, meta: dict, matomo_url: str, timeout: float = 8, token_auth: str = None,
+) -> bool:
     """
-    Send a single tracking request to Matomo using GET.
-    Returns True on success.
+    Send a single tracking request to Matomo.
+
+    Without a token_auth, sends a plain GET (Matomo only honors the 'ua'/'lang'
+    override params and 'cip' when authenticated, so GET plus request headers is
+    used in that case). With a token_auth configured, sends it as a POST using
+    Matomo's bulk tracking request format instead, which keeps the token out of
+    the URL/query string and works fine with a single event.
     """
+    if token_auth:
+        return send_bulk_tracking_events([{"params": params}], matomo_url, token_auth, timeout)
+
     headers = {
         "User-Agent": meta.get("user_agent", ""),
         "Accept-Language": meta.get("language", ""),

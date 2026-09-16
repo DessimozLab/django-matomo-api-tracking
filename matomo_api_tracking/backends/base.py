@@ -9,6 +9,7 @@ class BaseTrackingBackend:
             config = settings.MATOMO_API_TRACKING
             self.timeout = float(config.get("timeout", 8))
             self.url = config["url"]
+            self.token_auth = config.get("token_auth")
         except KeyError:
             raise Exception("Matomo configuration incomplete")
         except ValueError:

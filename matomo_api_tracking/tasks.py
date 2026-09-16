@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def send_matomo_tracking(params, meta, matomo_url, timeout):
-    return send_single_tracking_event(params, meta, matomo_url, timeout)
+def send_matomo_tracking(params, meta, matomo_url, timeout, token_auth=None):
+    return send_single_tracking_event(params, meta, matomo_url, timeout, token_auth=token_auth)
 
 
 @shared_task
