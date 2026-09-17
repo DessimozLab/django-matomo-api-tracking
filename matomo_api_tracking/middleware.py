@@ -25,14 +25,6 @@ class MatomoApiTrackingMiddleware:
         except (AttributeError, KeyError):
             raise Exception("Matomo configuration incomplete")
 
-        logger.debug(
-            "Matomo tracking config: url=%s site_id=%r backend=%s ignore_paths=%s",
-            url, account,
-            settings.MATOMO_API_TRACKING.get(
-                'backend', 'matomo_api_tracking.backends.celery.CeleryTrackingBackend'),
-            ignore_paths,
-        )
-
         # do not log pages that start with an ignore_path url
         if any(p for p in ignore_paths if request.path.startswith(p)):
             logger.debug("Matomo tracking skipped for %s (matches ignore_paths)", request.path)

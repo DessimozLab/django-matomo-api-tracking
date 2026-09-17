@@ -24,13 +24,13 @@ def send_single_tracking_event(
         "User-Agent": meta.get("user_agent", ""),
         "Accept-Language": meta.get("language", ""),
     }
-    logger.debug("Sending Matomo tracking request to %s with params: %s", matomo_url, params)
+    logger.debug("Sending Matomo tracking GET request to %s with params: %s", matomo_url, params)
     try:
         resp = requests.get(matomo_url, params=params, headers=headers, timeout=timeout)
         if resp.ok:
             logger.debug("Matomo tracking sent successfully.")
         else:
-            logger.warning("Matomo tracking failed: %s", resp.reason)
+            logger.warning("Matomo tracking failed: %s; %s", resp.reason, resp.text)
         return resp.ok
     except requests.exceptions.Timeout:
         logger.warning("tracking request timed out: %s", matomo_url)
@@ -66,10 +66,10 @@ def send_bulk_tracking_events(
         )
 
         if resp.ok:
-            logger.debug("Matomo bulk tracking sent successfully.")
+            logger.debug("Matomo bulk tracking sent successfully: %s", resp.text)
             return True
 
-        logger.warning("Matomo bulk tracking failed: %s", resp.reason)
+        logger.warning("Matomo bulk tracking failed: %s; %s", resp.reason, resp.text)
         return False
 
     except requests.RequestException as exc:
