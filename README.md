@@ -34,7 +34,7 @@ For this middleware to work you must have the following items configured:
             # "matomo_api_tracking.backends.direct.DirectTrackingBackend",  # for debugging
         # 'ignore_paths': ["/debug/", "/health/"],
         # 'ignore_status_codes': [301, 302],  # e.g. don't track redirects
-        # 'url_masks': [(r"/api/hog/[^/]+/", "/api/hog/:hog_id/")],  # collapse dynamic path segments
+        # 'url_masks': [(r"/api/hog/[^/]+", "/api/hog/:hog_id")],  # collapse dynamic path segments
         # 'token_auth': "<your auth token>",  # e.g.  "33dc3f2536d3025974cccb4b4d2d98f4"
         # 'timeout': 8,
         # 'redis_url': 'redis://localhost:6379/0',  # only needed for batching in the RedisBatchTrackingBackend
@@ -96,12 +96,17 @@ with `re.sub` to the tracked path in order, e.g.:
 
 ```
     'url_masks': [
-        (r"/api/hog/[^/]+/", "/api/hog/:hog_id/"),
+        (r"/api/hog/[^/]+", "/api/hog/:hog_id"),
     ],
 ```
 
 With this configured, a request to `/api/hog/HOG:F0014552.1b/` is tracked as
-`/api/hog/:hog_id/`. You can add multiple entries if several paths need this kind
-of masking.
+`/api/hog/:hog_id/`, and a request to `/api/hog/HOG:F0014552.1b` (no trailing
+slash) is tracked as `/api/hog/:hog_id`. You can add multiple entries if several
+paths need this kind of masking.
+
+Note: `request.path` never includes the query string and does not always end in
+a trailing slash, so avoid anchoring your pattern on a trailing `/` (e.g. don't
+write `[^/]+/`) — otherwise requests without one won't be masked.
 
 
