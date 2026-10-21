@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-21
+
 ### Added
 - `ignore_status_codes` setting to skip tracking for responses with the given HTTP
   status codes (e.g. `[301, 302]` to not track redirects).
@@ -106,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: Django middleware that tracks page views server-side through the
   Matomo tracking API, sending requests asynchronously via Celery.
 
-[Unreleased]: https://github.com/DessimozLab/django-matomo-api-tracking/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/DessimozLab/django-matomo-api-tracking/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/DessimozLab/django-matomo-api-tracking/compare/v0.3.4...v0.4.0
 [0.3.4]: https://github.com/DessimozLab/django-matomo-api-tracking/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/DessimozLab/django-matomo-api-tracking/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/DessimozLab/django-matomo-api-tracking/compare/v0.3.1...v0.3.2
