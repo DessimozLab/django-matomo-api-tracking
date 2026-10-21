@@ -7,7 +7,7 @@ from urllib.parse import parse_qs
 from unittest.mock import patch, MagicMock
 from requests.exceptions import Timeout
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanentRedirect
 from django.test import TestCase, override_settings
 from django.test.client import Client, RequestFactory
 from django.conf import settings
@@ -237,6 +237,29 @@ class MatomoTestCase(TestCase):
         middleware = MatomoApiTrackingMiddleware(lambda req: HttpResponse())
         middleware(request)
         self.assertEqual(len(responses.calls), 0)
+
+    @override_settings(MIDDLEWARE=[
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'matomo_api_tracking.middleware.MatomoApiTrackingMiddleware'
+    ], MATOMO_API_TRACKING=ChainMap({'ignore_status_codes': [301, 302]},
+                                    settings.MATOMO_API_TRACKING))
+    @responses.activate
+    def test_matomo_middleware_ignore_status_codes(self):
+        responses.add(
+            responses.GET, settings.MATOMO_API_TRACKING['url'],
+            body='',
+            status=200)
+
+        for redirect_cls in (HttpResponseRedirect, HttpResponsePermanentRedirect):
+            request = self.make_fake_request('/somewhere/')
+            middleware = MatomoApiTrackingMiddleware(lambda req: redirect_cls('/elsewhere/'))
+            middleware(request)
+        self.assertEqual(len(responses.calls), 0)
+
+        request = self.make_fake_request('/somewhere/')
+        middleware = MatomoApiTrackingMiddleware(lambda req: HttpResponse())
+        middleware(request)
+        self.assertEqual(len(responses.calls), 1)
 
     @override_settings(MIDDLEWARE=[
         'django.contrib.sessions.middleware.SessionMiddleware',

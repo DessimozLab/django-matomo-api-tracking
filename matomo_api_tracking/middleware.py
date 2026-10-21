@@ -22,12 +22,19 @@ class MatomoApiTrackingMiddleware:
             url = settings.MATOMO_API_TRACKING['url']
             account = settings.MATOMO_API_TRACKING['site_id']
             ignore_paths = settings.MATOMO_API_TRACKING.get('ignore_paths', [])
+            ignore_status_codes = settings.MATOMO_API_TRACKING.get('ignore_status_codes', [])
         except (AttributeError, KeyError):
             raise Exception("Matomo configuration incomplete")
 
         # do not log pages that start with an ignore_path url
         if any(p for p in ignore_paths if request.path.startswith(p)):
             logger.debug("Matomo tracking skipped for %s (matches ignore_paths)", request.path)
+            return response
+
+        # do not log responses with an ignored status code (e.g. redirects)
+        if response.status_code in ignore_status_codes:
+            logger.debug("Matomo tracking skipped for %s (status code %s in ignore_status_codes)",
+                         request.path, response.status_code)
             return response
 
         try:
