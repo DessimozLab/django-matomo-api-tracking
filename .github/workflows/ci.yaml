@@ -46,7 +46,13 @@ jobs:
             tox-env: "py314-dj61"
           #- python-version: "3.14"
           #  tox-env: "py314-dj62"
-          - python-version: "3.14"
+          - python-version: "3.15"
+            tox-env: "py315-dj52"
+          - python-version: "3.15"
+            tox-env: "py315-dj61"
+          #- python-version: "3.15"
+          #  tox-env: "py315-dj62"
+          - python-version: "3.15"
             tox-env: "lint"
     steps:
       - uses: actions/checkout@v7
