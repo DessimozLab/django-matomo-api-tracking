@@ -1,5 +1,5 @@
 name: Continuous Integration
-on: [push]
+on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,9 +15,13 @@ jobs:
           - python-version: "3.10"
             tox-env: "py310-dj52"
           - python-version: "3.11"
+            tox-env: "py311-dj32"
+          - python-version: "3.11"
             tox-env: "py311-dj42"
           - python-version: "3.11"
             tox-env: "py311-dj52"
+          - python-version: "3.12"
+            tox-env: "py312-dj32"
           - python-version: "3.12"
             tox-env: "py312-dj42"
           - python-version: "3.12"
@@ -46,7 +50,27 @@ jobs:
             tox-env: "py314-dj61"
           #- python-version: "3.14"
           #  tox-env: "py314-dj62"
-          - python-version: "3.14"
+          - python-version: "3.15"
+            tox-env: "py315-dj52"
+          - python-version: "3.15"
+            tox-env: "py315-dj60"
+          - python-version: "3.15"
+            tox-env: "py315-dj61"
+          #- python-version: "3.15"
+          #  tox-env: "py315-dj62"
+          - python-version: "3.10"
+            tox-env: "py310-dj22-lowest"
+          - python-version: "3.10"
+            tox-env: "py310-dj42-lowest"
+          - python-version: "3.13"
+            tox-env: "py313-dj52-lowest"
+          - python-version: "3.13"
+            tox-env: "py313-dj61-lowest"
+          - python-version: "3.15"
+            tox-env: "py315-dj52-lowest"
+          - python-version: "3.15"
+            tox-env: "py315-dj61-lowest"
+          - python-version: "3.15"
             tox-env: "lint"
     steps:
       - uses: actions/checkout@v7
@@ -58,7 +82,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v10.3.0
       - name: Install testing dependancies
-        run: pip install --upgrade pip tox tox-uv coveralls
+        run: pip install --upgrade pip tox tox-uv
       - name: Run tests
         env:
           TOXENV: ${{ matrix.tox-env }}
